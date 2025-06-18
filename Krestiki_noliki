@@ -1,0 +1,543 @@
+using System;
+using System.Linq;
+using System.Windows.Forms;
+
+
+
+//Легкий уровень представляет собой самый простой вариант игры, где компьютер делает случайные ходы, выбирая свободные клетки на игровом поле. Он не анализирует ситуацию на доске и не пытается блокировать игрока или выигрывать.
+
+//Средний уровень включает базовую стратегию, при которой компьютер проверяет возможность выигрыша в следующем ходе. Если он может выиграть, он делает этот ход. Если игрок может выиграть в следующем ходе, компьютер блокирует его, ставя "O" в нужную клетку. Если ни один из этих вариантов не доступен, компьютер делает случайный ход среди оставшихся свободных клеток. 
+
+//Сложный уровень использует алгоритм минимакс для принятия решений. Компьютер анализирует все возможные ходы и их последствия, оценивая каждую позицию на доске. Он определяет, какой ход максимизирует шансы на победу для компьютера и минимизирует шансы на победу для игрока. Алгоритм проходит по всем возможным состояниям игры, выбирая оптимальный ход, что делает его практически непобедимым при правильной реализации. 
+namespace WindowsFormsApplication1
+{
+    public partial class Form1 : Form
+    {
+        string name;
+        bool pc = false;
+        bool turn = true; // true = ход X, false = ход O
+        int turn_count = 0;
+
+        // Кнопки игрового поля
+        private Button A1;
+        private Button A2;
+        private Button A3;
+        private Button B1;
+        private Button B2;
+        private Button B3;
+        private Button C1;
+        private Button C2;
+        private Button C3;
+
+        private Label label1;
+        private ComboBox difficultyComboBox;
+        private Button newGameButton;
+
+        // Перечисление уровней сложности
+        private enum DifficultyLevel
+        {
+            Easy,
+            Medium,
+            Hard
+        }
+
+        // Текущий уровень сложности по умолчанию
+        private DifficultyLevel currentDifficulty = DifficultyLevel.Easy;
+
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void InitializeComponent()
+        {
+            this.A1 = new Button();
+            this.A2 = new Button();
+            this.A3 = new Button();
+            this.B1 = new Button();
+            this.B2 = new Button();
+            this.B3 = new Button();
+            this.C1 = new Button();
+            this.C2 = new Button();
+            this.C3 = new Button();
+
+            this.label1 = new Label();
+            this.difficultyComboBox = new ComboBox();
+            this.newGameButton = new Button();
+
+            // 
+            // Form1
+            // 
+            this.ClientSize = new System.Drawing.Size(350, 450);
+            this.Text = "Крестики-нолики";
+
+            // Общий размер кнопок
+            System.Drawing.Size btnSize = new System.Drawing.Size(80, 80);
+
+            // Настройка расположения и свойств кнопок
+            this.A1.Location = new System.Drawing.Point(20, 80);
+            this.A1.Name = "A1";
+            this.A1.Size = btnSize;
+            this.A1.TabIndex = 0;
+            this.A1.UseVisualStyleBackColor = true;
+            this.A1.Click += button_click;
+
+            this.A2.Location = new System.Drawing.Point(110, 80);
+            this.A2.Name = "A2";
+            this.A2.Size = btnSize;
+            this.A2.TabIndex = 1;
+            this.A2.UseVisualStyleBackColor = true;
+            this.A2.Click += button_click;
+
+            this.A3.Location = new System.Drawing.Point(200, 80);
+            this.A3.Name = "A3";
+            this.A3.Size = btnSize;
+            this.A3.TabIndex = 2;
+            this.A3.UseVisualStyleBackColor = true;
+            this.A3.Click += button_click;
+
+            this.B1.Location = new System.Drawing.Point(20, 170);
+            this.B1.Name = "B1";
+            this.B1.Size = btnSize;
+            this.B1.TabIndex = 3;
+            this.B1.UseVisualStyleBackColor = true;
+            this.B1.Click += button_click;
+
+            this.B2.Location = new System.Drawing.Point(110, 170);
+            this.B2.Name = "B2";
+            this.B2.Size = btnSize;
+            this.B2.TabIndex = 4;
+            this.B2.UseVisualStyleBackColor = true;
+            this.B2.Click += button_click;
+
+            this.B3.Location = new System.Drawing.Point(200, 170);
+            this.B3.Name = "B3";
+            this.B3.Size = btnSize;
+            this.B3.TabIndex = 5;
+            this.B3.UseVisualStyleBackColor = true;
+            this.B3.Click += button_click;
+
+            this.C1.Location = new System.Drawing.Point(20, 260);
+            this.C1.Name = "C1";
+            this.C1.Size = btnSize;
+            this.C1.TabIndex = 6;
+            this.C1.UseVisualStyleBackColor = true;
+            this.C1.Click += button_click;
+
+            this.C2.Location = new System.Drawing.Point(110, 260);
+            this.C2.Name = "C2";
+            this.C2.Size = btnSize;
+            this.C2.TabIndex = 7;
+            this.C2.UseVisualStyleBackColor = true;
+            this.C2.Click += button_click;
+
+            this.C3.Location = new System.Drawing.Point(200, 260);
+            this.C3.Name = "C3";
+            this.C3.Size = btnSize;
+            this.C3.TabIndex = 8;
+            this.C3.UseVisualStyleBackColor = true;
+            this.C3.Click += button_click;
+
+            // label1 - отображение информации о ходе и счёте
+            this.label1.Location = new System.Drawing.Point(20, 360);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(310, 40);
+            this.label1.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.label1.Text = "Счёт ходов: 0";
+
+            // comboBox для выбора сложности
+            this.difficultyComboBox.Location = new System.Drawing.Point(20, 20);
+            this.difficultyComboBox.Name = "difficultyComboBox";
+            this.difficultyComboBox.Size = new System.Drawing.Size(150, 23);
+            this.difficultyComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.difficultyComboBox.Items.AddRange(new string[] { "Легкий", "Средний", "Сложный" });
+            this.difficultyComboBox.SelectedIndex = 0; // по умолчанию Легкий
+            this.difficultyComboBox.SelectedIndexChanged += DifficultyComboBox_SelectedIndexChanged;
+
+            // кнопка новая игра
+            this.newGameButton.Location = new System.Drawing.Point(200, 20);
+            this.newGameButton.Name = "newGameButton";
+            this.newGameButton.Size = new System.Drawing.Size(130, 30);
+            this.newGameButton.Text = "Новая игра";
+            this.newGameButton.Click += NewGameButton_Click;
+
+            // добавляем контролы на форму
+            this.Controls.Add(this.A1);
+            this.Controls.Add(this.A2);
+            this.Controls.Add(this.A3);
+            this.Controls.Add(this.B1);
+            this.Controls.Add(this.B2);
+            this.Controls.Add(this.B3);
+            this.Controls.Add(this.C1);
+            this.Controls.Add(this.C2);
+            this.Controls.Add(this.C3);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.difficultyComboBox);
+            this.Controls.Add(this.newGameButton);
+
+            ResetGame();
+        }
+
+        private void DifficultyComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            currentDifficulty = (DifficultyLevel)difficultyComboBox.SelectedIndex;
+            ResetGame();
+        }
+
+        private void NewGameButton_Click(object sender, EventArgs e)
+        {
+            ResetGame();
+        }
+
+        // Сбросить игру
+        private void ResetGame()
+        {
+            turn = true; // X ходит первым
+            turn_count = 0;
+            label1.Text = "Игра началась. Ходит: X";
+
+            foreach (Control c in Controls)
+            {
+                if (c is Button b && b != newGameButton)
+                {
+                    b.Text = "";
+                    b.Enabled = true;
+                }
+            }
+        }
+
+        // Обработка клика пользователя
+        private void button_click(object sender, EventArgs e)
+        {
+            Button b = (Button)sender;
+
+            if (!b.Enabled) return; // Защита на случай
+
+            if (turn)
+                b.Text = "X";
+            else
+                b.Text = "O";
+
+            b.Enabled = false;
+            turn_count++;
+
+            if (CheckWinner())
+            {
+                // Победа, игра закончена
+                label1.Text = $"Победа {(turn ? "X" : "O")}!";
+                DisableAllButtons();
+                return;
+            }
+            else if (turn_count == 9)
+            {
+                // Ничья
+                label1.Text = "Ничья!";
+                return;
+            }
+            else
+            {
+                // Меняем ход
+                turn = !turn;
+                label1.Text = $"Ходит: {(turn ? "X" : "O")}";
+            }
+
+            // Если сейчас ход компьютера (O)
+            if (!turn)
+            {
+                MakeComputerMove();
+
+                if (CheckWinner())
+                {
+                    label1.Text = "Победа O!";
+                    DisableAllButtons();
+                    return;
+                }
+                else if (turn_count == 9)
+                {
+                    label1.Text = "Ничья!";
+                    return;
+                }
+                else
+                {
+                    turn = true;
+                    label1.Text = "Ходит: X";
+                }
+            }
+        }
+
+        // Метод хода компьютера, выбирает стратегию в зависимости от сложности
+        private void MakeComputerMove()
+        {
+            Button[] buttons = GetButtons();
+
+            int move = -1;
+
+            switch (currentDifficulty)
+            {
+                case DifficultyLevel.Easy:
+                    // Случайный ход
+                    move = GetRandomMove(buttons);
+                    break;
+                case DifficultyLevel.Medium:
+                    // Если можно выиграть - выиграть
+                    move = GetWinningMove(buttons, "O");
+                    if (move == -1)
+                    {
+                        // Если игрок может выиграть - заблокировать
+                        move = GetWinningMove(buttons, "X");
+                    }
+                    if (move == -1)
+                    {
+                        // Иначе случайный ход
+                        move = GetRandomMove(buttons);
+                    }
+                    break;
+                case DifficultyLevel.Hard:
+                    // Минимакс
+                    move = GetBestMove(buttons);
+                    break;
+            }
+
+            if (move != -1)
+            {
+                Button b = buttons[move];
+                b.Text = "O";
+                b.Enabled = false;
+                turn_count++;
+            }
+        }
+
+        // Получить все кнопки в массиве
+        private Button[] GetButtons()
+        {
+            return new Button[] { A1, A2, A3, B1, B2, B3, C1, C2, C3 };
+        }
+
+        // Случайный ход из открытых клеток
+        private int GetRandomMove(Button[] buttons)
+        {
+            Random rnd = new Random();
+            var available = buttons.Select((b, idx) => new { b, idx }).Where(x => x.b.Enabled).Select(x => x.idx).ToList();
+            if (available.Count == 0) return -1;
+            int choice = available[rnd.Next(available.Count)];
+            return choice;
+        }
+
+        // Проверка, может ли игрок/computer выиграть в одном ходе, возвращает индекс кнопки для хода или -1
+        private int GetWinningMove(Button[] buttons, string player)
+        {
+            string[,] winningPatterns = new string[,]
+            {
+                { buttons[0].Text, buttons[1].Text, buttons[2].Text },
+                { buttons[3].Text, buttons[4].Text, buttons[5].Text },
+                { buttons[6].Text, buttons[7].Text, buttons[8].Text },
+                { buttons[0].Text, buttons[3].Text, buttons[6].Text },
+                { buttons[1].Text, buttons[4].Text, buttons[7].Text },
+                { buttons[2].Text, buttons[5].Text, buttons[8].Text },
+                { buttons[0].Text, buttons[4].Text, buttons[8].Text },
+                { buttons[2].Text, buttons[4].Text, buttons[6].Text }
+            };
+            int[][] indices = new int[][]
+            {
+                new int[] {0,1,2}, new int[] {3,4,5}, new int[] {6,7,8},
+                new int[] {0,3,6}, new int[] {1,4,7}, new int[] {2,5,8},
+                new int[] {0,4,8}, new int[] {2,4,6}
+            };
+
+            for (int i = 0; i < 8; i++)
+            {
+                // Посчитать количество ячеек с player и пустых
+                int countPlayer = 0;
+                int countEmpty = 0;
+                int emptyIndex = -1;
+
+                for (int j = 0; j < 3; j++)
+                {
+                    string val = winningPatterns[i, j];
+                    if (val == player) countPlayer++;
+                    else if (string.IsNullOrEmpty(val))
+                    {
+                        countEmpty++;
+                        emptyIndex = indices[i][j];
+                    }
+                }
+
+                // Если 2 X или O и одна пустая — возвращаем индекс пустой для хода
+                if (countPlayer == 2 && countEmpty == 1)
+                {
+                    return emptyIndex;
+                }
+            }
+
+            return -1;
+        }
+
+        // Проверка победы (используем для определения победителя)
+        private bool CheckWinner()
+        {
+            Button[] buttons = GetButtons();
+
+            string[,] winningPatterns = new string[,]
+            {
+                { buttons[0].Text, buttons[1].Text, buttons[2].Text },
+                { buttons[3].Text, buttons[4].Text, buttons[5].Text },
+                { buttons[6].Text, buttons[7].Text, buttons[8].Text },
+                { buttons[0].Text, buttons[3].Text, buttons[6].Text },
+                { buttons[1].Text, buttons[4].Text, buttons[7].Text },
+                { buttons[2].Text, buttons[5].Text, buttons[8].Text },
+                { buttons[0].Text, buttons[4].Text, buttons[8].Text },
+                { buttons[2].Text, buttons[4].Text, buttons[6].Text }
+            };
+
+            for (int i = 0; i < 8; i++)
+            {
+                string s1 = winningPatterns[i, 0];
+                string s2 = winningPatterns[i, 1];
+                string s3 = winningPatterns[i, 2];
+
+                if (!string.IsNullOrEmpty(s1) && s1 == s2 && s2 == s3)
+                {
+                    HighlightWinningLine(i);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Подсветить выигрышную линию
+        private void HighlightWinningLine(int patternIndex)
+        {
+            Button[] buttons = GetButtons();
+            int[][] lines = new int[][]
+            {
+                new int[] {0,1,2}, new int[] {3,4,5}, new int[] {6,7,8},
+                new int[] {0,3,6}, new int[] {1,4,7}, new int[] {2,5,8},
+                new int[] {0,4,8}, new int[] {2,4,6}
+            };
+
+            foreach (int idx in lines[patternIndex])
+            {
+                buttons[idx].BackColor = System.Drawing.Color.LightGreen;
+            }
+        }
+
+        // Отключить все кнопки (окончание игры)
+        private void DisableAllButtons()
+        {
+            foreach (Control c in Controls)
+            {
+                if (c is Button b && b != newGameButton)
+                {
+                    b.Enabled = false;
+                }
+            }
+        }
+
+        // Минимакс алгоритм для сложно уровня
+        private int GetBestMove(Button[] buttons)
+        {
+            int bestScore = int.MinValue;
+            int move = -1;
+
+            // Сохраняем состояния доски в массив строк
+            string[] board = buttons.Select(b => b.Text).ToArray();
+
+            for (int i = 0; i < 9; i++)
+            {
+                if (string.IsNullOrEmpty(board[i]))
+                {
+                    board[i] = "O";
+                    int score = Minimax(board, 0, false);
+                    board[i] = "";
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        move = i;
+                    }
+                }
+            }
+            return move;
+        }
+
+        // Оценка результата минимакс
+        private int Minimax(string[] board, int depth, bool isMaximizing)
+        {
+            string winner = CheckWinnerStatic(board);
+            if (winner != null)
+            {
+                if (winner == "O") return 10 - depth;
+                else if (winner == "X") return depth - 10;
+                else return 0; // ничья
+            }
+
+            if (isMaximizing)
+            {
+                int maxEval = int.MinValue;
+                for (int i = 0; i < 9; i++)
+                {
+                    if (string.IsNullOrEmpty(board[i]))
+                    {
+                        board[i] = "O";
+                        int eval = Minimax(board, depth + 1, false);
+                        board[i] = "";
+                        maxEval = Math.Max(maxEval, eval);
+                    }
+                }
+                return maxEval;
+            }
+            else
+            {
+                int minEval = int.MaxValue;
+                for (int i = 0; i < 9; i++)
+                {
+                    if (string.IsNullOrEmpty(board[i]))
+                    {
+                        board[i] = "X";
+                        int eval = Minimax(board, depth + 1, true);
+                        board[i] = "";
+                        minEval = Math.Min(minEval, eval);
+                    }
+                }
+                return minEval;
+            }
+        }
+
+        // Проверка победы для доски в виде массива строк
+        private string CheckWinnerStatic(string[] board)
+        {
+            int[][] lines = new int[][]
+            {
+                new int[] {0,1,2}, new int[] {3,4,5}, new int[] {6,7,8},
+                new int[] {0,3,6}, new int[] {1,4,7}, new int[] {2,5,8},
+                new int[] {0,4,8}, new int[] {2,4,6}
+            };
+
+            foreach (var line in lines)
+            {
+                string a = board[line[0]];
+                string b = board[line[1]];
+                string c = board[line[2]];
+
+                if (!string.IsNullOrEmpty(a) && a == b && b == c)
+                {
+                    return a;
+                }
+            }
+
+            if (board.All(s => !string.IsNullOrEmpty(s)))
+                return "Draw";
+
+            return null;
+        }
+
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1());
+        }
+    }
+}
+
