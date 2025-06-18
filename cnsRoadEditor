@@ -1,0 +1,538 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+public class RoadMap
+{
+    char[,] map;
+    private int Rows { get; }
+    private int Cols { get; }
+
+    public RoadMap(int rows, int cols)
+    {
+        map = new char[rows, cols];
+        Rows = rows;
+        Cols = cols;
+    }
+
+    public bool SaveMapToFile(string filePath)
+    {
+        try
+        {
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                writer.WriteLine($"{this.Rows} {this.Cols}");
+
+                for (int i = 0; i < this.Rows; i++)
+                {
+                    for (int j = 0; j < this.Cols; j++)
+                    {
+                        char c = map[i, j];
+                        writer.Write(c == '\0' ? ' ' : c);
+                    }
+                    writer.WriteLine();
+                }
+            }
+            Console.WriteLine($"РљР°СЂС‚Р° СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅРµРЅР° РІ С„Р°Р№Р»: {filePath}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"РћС€РёР±РєР° РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё РєР°СЂС‚С‹ РІ С„Р°Р№Р»: {ex.Message}");
+            return false;
+        }
+    }
+
+    public static RoadMap LoadMapFromFile(string filePath)
+    {
+        try
+        {
+            if (!File.Exists(filePath))
+            {
+                Console.WriteLine($"РћС€РёР±РєР°: Р¤Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ - {filePath}");
+                return null;
+            }
+
+            using (StreamReader reader = new StreamReader(filePath))
+            {
+                string dimensionsLine = reader.ReadLine();
+                if (dimensionsLine == null)
+                {
+                    Console.WriteLine("РћС€РёР±РєР°: Р¤Р°Р№Р» РїСѓСЃС‚ РёР»Рё РЅРµ СЃРѕРґРµСЂР¶РёС‚ СЂР°Р·РјРµСЂРѕРІ.");
+                    return null;
+                }
+
+                string[] parts = dimensionsLine.Split(' ');
+                if (parts.Length != 2 || !int.TryParse(parts[0], out int loadedRows) || !int.TryParse(parts[1], out int loadedCols))
+                {
+                    Console.WriteLine("РћС€РёР±РєР°: РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ С„РѕСЂРјР°С‚ СЂР°Р·РјРµСЂРѕРІ РІ С„Р°Р№Р»Рµ.");
+                    return null;
+                }
+
+                RoadMap loadedMap = new RoadMap(loadedRows, loadedCols);
+
+                for (int i = 0; i < loadedRows; i++)
+                {
+                    string line = reader.ReadLine();
+                    if (line == null)
+                    {
+                        Console.WriteLine($"РћС€РёР±РєР°: РќРµРѕР¶РёРґР°РЅРЅС‹Р№ РєРѕРЅРµС† С„Р°Р№Р»Р° РїСЂРё С‡С‚РµРЅРёРё СЃС‚СЂРѕРєРё {i + 1} РєР°СЂС‚С‹.");
+                        return null;
+                    }
+
+                    for (int j = 0; j < loadedCols; j++)
+                    {
+                        if (j < line.Length)
+                        {
+                            char c = line[j];
+                            loadedMap.map[i, j] = (c == ' ' ? '\0' : c);
+                        }
+                        else
+                        {
+                            loadedMap.map[i, j] = '\0';
+                        }
+                    }
+                }
+                Console.WriteLine($"РљР°СЂС‚Р° СѓСЃРїРµС€РЅРѕ Р·Р°РіСЂСѓР¶РµРЅР° РёР· С„Р°Р№Р»Р°: {filePath}");
+                return loadedMap;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"РћС€РёР±РєР° РїСЂРё Р·Р°РіСЂСѓР·РєРµ РєР°СЂС‚С‹ РёР· С„Р°Р№Р»Р°: {ex.Message}");
+            return null;
+        }
+    }
+
+    public void DrawRectangle(int x1, int y1, int x2, int y2)
+    {
+        for (int i = y1; i <= y2; i++)
+        {
+            for (int j = x1; j <= x2; j++)
+            {
+                // Р•СЃР»Рё С‚РµРєСѓС‰Р°СЏ СЃС‚СЂРѕРєР° - СЌС‚Рѕ РІРµСЂС…РЅСЏСЏ РіСЂР°РЅРёС†Р° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР°
+                if (i == y1)
+                {
+                    // Р•СЃР»Рё С‚РµРєСѓС‰РёР№ СЃС‚РѕР»Р±РµС† - СЌС‚Рѕ Р»РµРІР°СЏ РіСЂР°РЅРёС†Р° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР°
+                    if (j == x1)
+                    {
+                        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРёРјРІРѕР» РІРµСЂС…РЅРµРіРѕ Р»РµРІРѕРіРѕ СѓРіР»Р°
+                        map[i, j] = (char)RoadSymbol.TopLeftCorner;
+                    }
+                    // Р•СЃР»Рё С‚РµРєСѓС‰РёР№ СЃС‚РѕР»Р±РµС† - СЌС‚Рѕ РїСЂР°РІР°СЏ РіСЂР°РЅРёС†Р° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР°
+                    else if (j == x2)
+                    {
+                        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРёРјРІРѕР» РІРµСЂС…РЅРµРіРѕ РїСЂР°РІРѕРіРѕ СѓРіР»Р°
+                        map[i, j] = (char)RoadSymbol.TopRightCorner;
+                    }
+                    // Р•СЃР»Рё СЌС‚Рѕ РІРµСЂС…РЅСЏСЏ СЃС‚СЂРѕРєР°, РЅРѕ РЅРµ СѓРіРѕР»
+                    else
+                    {
+                        map[i, j] = (char)RoadSymbol.Horizontal;
+                    }
+                }
+                // Р•СЃР»Рё С‚РµРєСѓС‰Р°СЏ СЃС‚СЂРѕРєР° - СЌС‚Рѕ РЅРёР¶РЅСЏСЏ РіСЂР°РЅРёС†Р° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР°
+                else if (i == y2)
+                {
+                    // Р•СЃР»Рё С‚РµРєСѓС‰РёР№ СЃС‚РѕР»Р±РµС† - СЌС‚Рѕ Р»РµРІР°СЏ РіСЂР°РЅРёС†Р° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР°
+                    if (j == x1)
+                    {
+                        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРёРјРІРѕР» РЅРёР¶РЅРµРіРѕ Р»РµРІРѕРіРѕ СѓРіР»Р°
+                        map[i, j] = (char)RoadSymbol.BottomLeftCorner;
+                    }
+                    // Р•СЃР»Рё С‚РµРєСѓС‰РёР№ СЃС‚РѕР»Р±РµС† - СЌС‚Рѕ РїСЂР°РІР°СЏ РіСЂР°РЅРёС†Р° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР°
+                    else if (j == x2)
+                    {
+                        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРёРјРІРѕР» РЅРёР¶РЅРµРіРѕ РїСЂР°РІРѕРіРѕ СѓРіР»Р°
+                        map[i, j] = (char)RoadSymbol.BottomRightCorner;
+                    }
+                    // Р•СЃР»Рё СЌС‚Рѕ РЅРёР¶РЅСЏСЏ СЃС‚СЂРѕРєР°, РЅРѕ РЅРµ СѓРіРѕР»
+                    else
+                    {
+                        map[i, j] = (char)RoadSymbol.Horizontal;
+                    }
+                }
+                // Р•СЃР»Рё С‚РµРєСѓС‰РёР№ СЃС‚РѕР»Р±РµС† - СЌС‚Рѕ Р»РµРІР°СЏ РёР»Рё РїСЂР°РІР°СЏ РіСЂР°РЅРёС†Р° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР° (РґР»СЏ РІРЅСѓС‚СЂРµРЅРЅРёС… СЃС‚СЂРѕРє)
+                else if (j == x1 || j == x2)
+                {
+                    map[i, j] = (char)RoadSymbol.Vertical;
+                }
+            }
+        }
+        Redraw(x1, y1, x2, y2);
+    }
+
+    public void DrawLineGorizontal(int x1, int x2, int y)
+    {
+        for (int i = x1; i <= x2; i++)
+        {
+            map[y, i] = (char)RoadSymbol.Horizontal;
+        }
+        Redraw(x1, y, x2, y);
+    }
+
+    public void DrawLineVertical(int y1, int y2, int x)
+    {
+        for (int i = y1; i <= y2; i++)
+        {
+            map[i, x] = (char)RoadSymbol.Vertical;
+        }
+        Redraw(x, y1, x, y2);
+    }
+
+    private bool HasLeft(int y, int x)
+    {
+        return !(x == 0 || map[y, x - 1] == (char)RoadSymbol.Empty || map[y, x - 1] == ' ' || map[y, x - 1] == (char)RoadSymbol.TJunctionLeft || map[y, x - 1] == (char)RoadSymbol.Vertical);
+    }
+
+    private bool HasRight(int y, int x)
+    {
+        return !(x == this.Cols - 1 || map[y, x + 1] == (char)RoadSymbol.Empty || map[y, x + 1] == ' ' || map[y, x + 1] == (char)RoadSymbol.TJunctionRight || map[y, x + 1] == (char)RoadSymbol.Vertical);
+    }
+
+    private bool HasUp(int y, int x)
+    {
+        return !(y == 0 || map[y - 1, x] == (char)RoadSymbol.Empty || map[y - 1, x] == ' ' || map[y - 1, x] == (char)RoadSymbol.TJunctionUp || map[y - 1, x] == (char)RoadSymbol.Horizontal);
+    }
+
+    private bool HasDown(int y, int x)
+    {
+        return !(y == this.Rows - 1 || map[y + 1, x] == (char)RoadSymbol.Empty || map[y + 1, x] == ' ' || map[y + 1, x] == (char)RoadSymbol.TJunctionDown || map[y + 1, x] == (char)RoadSymbol.Horizontal);
+    }
+
+    private void Redraw(int x1, int y1, int x2, int y2)
+    {
+        for (int i = y1; i <= y2; i++)
+        {
+            for (int j = x1; j <= x2; j++)
+            {
+                if (i == y1 || i == y2 || j == x1 || j == x2)
+                {
+                    if (HasUp(i, j) && HasDown(i, j) && HasLeft(i, j) && HasRight(i, j)) { map[i, j] = (char)RoadSymbol.Intersection; }
+                    if (!HasUp(i, j) && HasDown(i, j) && HasLeft(i, j) && HasRight(i, j)) { map[i, j] = (char)RoadSymbol.TJunctionDown; }
+                    if (HasUp(i, j) && !HasDown(i, j) && HasLeft(i, j) && HasRight(i, j)) { map[i, j] = (char)RoadSymbol.TJunctionUp; }
+                    if (HasUp(i, j) && HasDown(i, j) && !HasLeft(i, j) && HasRight(i, j)) { map[i, j] = (char)RoadSymbol.TJunctionRight; }
+                    if (HasUp(i, j) && HasDown(i, j) && HasLeft(i, j) && !HasRight(i, j)) { map[i, j] = (char)RoadSymbol.TJunctionLeft; }
+                }
+            }
+        }
+    }
+
+    public char[,] GetMap()
+    {
+        return map;
+    }
+
+    public void DrawGrid(int x, int y, int gridWidth, int gridHeight, int cellWidth, int cellHeight)
+    {
+        if (cellWidth <= 0 || cellHeight <= 0)
+        {
+            Console.WriteLine("РћС€РёР±РєР°: РЁРёСЂРёРЅР° Рё РІС‹СЃРѕС‚Р° СЏС‡РµР№РєРё СЃРµС‚РєРё РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ Р±РѕР»СЊС€Рµ 0.");
+            return;
+        }
+
+        for (int i = 0; i <= gridHeight; i += cellHeight)
+        {
+            int currentY = y + i;
+            if (currentY >= 0 && currentY < this.Rows)
+            {
+                int startX = x;
+                int endX = x + gridWidth;
+                DrawLineGorizontal(Math.Max(0, startX), Math.Min(this.Cols - 1, endX), currentY);
+            }
+        }
+
+        for (int j = 0; j <= gridWidth; j += cellWidth)
+        {
+            int currentX = x + j;
+            if (currentX >= 0 && currentX < this.Cols)
+            {
+                int startY = y;
+                int endY = y + gridHeight;
+                DrawLineVertical(Math.Max(0, startY), Math.Min(this.Rows - 1, endY), currentX);
+            }
+        }
+    }
+
+    public void GenerateRandomMap(int elementsCount = 10, int maxLineLengthPercent = 50, int maxRectSizePercent = 30)
+    {
+        ClearMap();
+        Random random = new Random();
+
+        for (int k = 0; k < elementsCount; k++)
+        {
+            int elementType = random.Next(0, 3);
+
+            switch (elementType)
+            {
+                case 0:
+                    {
+                        int y = random.Next(0, this.Rows);
+                        int maxLength = Math.Max(1, (this.Cols * maxLineLengthPercent) / 100);
+                        int length = random.Next(1, maxLength + 1);
+                        int x1 = random.Next(0, this.Cols - length + 1);
+                        int x2 = x1 + length - 1;
+                        DrawLineGorizontal(x1, x2, y);
+                        break;
+                    }
+                case 1:
+                    {
+                        int x = random.Next(0, this.Cols);
+                        int maxLength = Math.Max(1, (this.Rows * maxLineLengthPercent) / 100);
+                        int length = random.Next(1, maxLength + 1);
+                        int y1 = random.Next(0, this.Rows - length + 1);
+                        int y2 = y1 + length - 1;
+                        DrawLineVertical(y1, y2, x);
+                        break;
+                    }
+                case 2:
+                    {
+                        int maxW = Math.Max(2, (this.Cols * maxRectSizePercent) / 100);
+                        int maxH = Math.Max(2, (this.Rows * maxRectSizePercent) / 100);
+
+                        int w = random.Next(2, maxW + 1);
+                        int h = random.Next(2, maxH + 1);
+
+                        if (this.Cols - w < 0 || this.Rows - h < 0) continue;
+
+                        int x1 = random.Next(0, this.Cols - w + 1);
+                        int y1 = random.Next(0, this.Rows - h + 1);
+                        int x2 = x1 + w - 1;
+                        int y2 = y1 + h - 1;
+                        DrawRectangle(x1, y1, x2, y2);
+                        break;
+                    }
+            }
+        }
+    }
+
+    public void ClearMap()
+    {
+        for (int i = 0; i < this.Rows; i++)
+        {
+            for (int j = 0; j < this.Cols; j++)
+            {
+                map[i, j] = (char)RoadSymbol.Empty;
+            }
+        }
+    }
+}
+
+public enum RoadSymbol
+{
+    Horizontal = '\u2500',
+    Vertical = '\u2502',
+    Intersection = '\u253C',
+    TJunctionDown = '\u252C',
+    TJunctionUp = '\u2534',
+    TJunctionRight = '\u251C',
+    TJunctionLeft = '\u2524',
+    Empty = '\0',
+    TopLeftCorner = '\u250C',
+    TopRightCorner = '\u2510',
+    BottomLeftCorner = '\u2514',
+    BottomRightCorner = '\u2518'
+}
+
+public class SymbolSpritesMap
+{
+    private char[,] map;
+
+    public SymbolSpritesMap(RoadMap rm)
+    {
+        map = rm.GetMap();
+    }
+
+    public void PrintSymbolSpriteRoad(char symbol = '\u2588')
+    {
+        char[,][,] newMap = new char[map.GetLength(0), map.GetLength(1)][,];
+        Dictionary<char, char[,]> sprites = new Dictionary<char, char[,]>
+        {
+            {(char)RoadSymbol.Horizontal, new char[4, 6]
+            {
+                { ' ', ' ', ' ', ' ', ' ', ' ' },
+                { symbol, symbol, symbol, symbol, symbol, symbol },
+                { symbol, symbol, symbol, symbol, symbol, symbol },
+                { ' ', ' ', ' ', ' ', ' ', ' ' }
+            }},
+            {(char)RoadSymbol.Vertical, new char[4, 6]
+            {
+                { ' ', ' ', symbol, symbol, ' ', ' ' },
+                { ' ', ' ', symbol, symbol, ' ', ' ' },
+                { ' ', ' ', symbol, symbol, ' ', ' ' },
+                { ' ', ' ', symbol, symbol, ' ', ' ' }
+            }},
+            {(char)RoadSymbol.Intersection, new char[4, 6]
+            {
+                { ' ', ' ', symbol, symbol, ' ', ' ' },
+                { symbol, symbol, symbol, symbol, symbol, symbol },
+                { symbol, symbol, symbol, symbol, symbol, symbol },
+                { ' ', ' ', symbol, symbol, ' ', ' ' }
+            }},
+            {(char)RoadSymbol.TJunctionDown, new char[4, 6]
+            {
+                { ' ', ' ', ' ', ' ', ' ', ' ' },
+                { symbol, symbol, symbol, symbol, symbol, symbol },
+                { symbol, symbol, symbol, symbol, symbol, symbol },
+                { ' ', ' ', symbol, symbol, ' ', ' ' }
+            }},
+            {(char)RoadSymbol.TJunctionUp, new char[4, 6]
+            {
+                { ' ', ' ', symbol, symbol, ' ', ' ' },
+                { symbol, symbol, symbol, symbol, symbol, symbol },
+                { symbol, symbol, symbol, symbol, symbol, symbol },
+                { ' ', ' ', ' ', ' ', ' ', ' ' }
+            }},
+            {(char)RoadSymbol.TJunctionRight, new char[4, 6]
+            {
+                { ' ', ' ', symbol, symbol, ' ', ' ' },
+                { ' ', ' ', symbol, symbol, symbol, symbol },
+                { ' ', ' ', symbol, symbol, symbol, symbol },
+                { ' ', ' ', symbol, symbol, ' ', ' ' }
+            }},
+            {(char)RoadSymbol.TJunctionLeft, new char[4, 6]
+            {
+                { ' ', ' ', symbol, symbol, ' ', ' ' },
+                { symbol, symbol, symbol, symbol, ' ', ' ' },
+                { symbol, symbol, symbol, symbol, ' ', ' ' },
+                { ' ', ' ', symbol, symbol, ' ', ' ' }
+            }},
+            {(char)RoadSymbol.Empty, new char[4, 6]
+            {
+                { ' ', ' ', ' ', ' ', ' ', ' ' },
+                { ' ', ' ', ' ', ' ', ' ', ' ' },
+                { ' ', ' ', ' ', ' ', ' ', ' ' },
+                { ' ', ' ', ' ', ' ', ' ', ' ' }
+            }},
+            {(char)RoadSymbol.TopLeftCorner, new char[4, 6]
+            {
+                { ' ', ' ', ' ', ' ', ' ', ' ' },
+                { ' ', ' ', symbol, symbol, symbol, symbol },
+                { ' ', ' ', symbol, symbol, symbol, symbol },
+                { ' ', ' ', symbol, symbol, ' ', ' ' }
+            }},
+            {(char)RoadSymbol.TopRightCorner, new char[4, 6]
+            {
+                { ' ', ' ', ' ', ' ', ' ', ' ' },
+                { symbol, symbol, symbol, symbol, ' ', ' ' },
+                { symbol, symbol, symbol, symbol, ' ', ' ' },
+                { ' ', ' ', symbol, symbol, ' ', ' ' }
+            }},
+            {(char)RoadSymbol.BottomLeftCorner, new char[4, 6]
+            {
+                { ' ', ' ', symbol, symbol, ' ', ' ' },
+                { ' ', ' ', symbol, symbol, symbol, symbol },
+                { ' ', ' ', symbol, symbol, symbol, symbol },
+                { ' ', ' ', ' ', ' ', ' ', ' ' }
+            }},
+            {(char)RoadSymbol.BottomRightCorner, new char[4, 6]
+            {
+                { ' ', ' ', symbol, symbol, ' ', ' ' },
+                { symbol, symbol, symbol, symbol, ' ', ' ' },
+                { symbol, symbol, symbol, symbol, ' ', ' ' },
+                { ' ', ' ', ' ', ' ', ' ', ' ' }
+            }},
+        };
+
+
+        for (int i = 0; i < map.GetLength(0); i++)
+        {
+            for (int j = 0; j < map.GetLength(1); j++)
+            {
+                char[,] arr = sprites.ContainsKey(map[i, j]) ? sprites[map[i, j]] : sprites[(char)RoadSymbol.Empty];
+                newMap[i, j] = arr;
+            }
+
+            for (int k = 0; k < 4; k++)
+            {
+                for (int j = 0; j < map.GetLength(1); j++)
+                {
+                    for (int l = 0; l < 6; l++)
+                    {
+                        Console.Write(newMap[i, j][k, l]);
+                    }
+                }
+                Console.WriteLine();
+            }
+        }
+    }
+}
+
+public static class Program
+{
+    public static void PrintTable(char[,] table)
+    {
+        int rows = table.GetLength(0);
+        int columns = table.GetLength(1);
+
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < columns; j++)
+            {
+                var c = table[i, j];
+                Console.Write(c == '\0' ? ' ' : c);
+                Console.Write(' ');
+            }
+            Console.WriteLine();
+        }
+    }
+
+    public static void Main()
+    {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+        Console.WriteLine("Тест 1: Два прямоугольника и горизонтальная линия");
+        RoadMap rm1 = new RoadMap(10, 10);
+        rm1.DrawRectangle(1, 1, 6, 6);
+        rm1.DrawRectangle(3, 3, 8, 8);
+        rm1.DrawLineGorizontal(0, 8, 5);
+        PrintTable(rm1.GetMap());
+
+        SymbolSpritesMap ssm1 = new SymbolSpritesMap(rm1);
+        ssm1.PrintSymbolSpriteRoad();
+
+        Console.WriteLine("\nТест 2: Прямоугольник и горизонтальная линия");
+        RoadMap rm2 = new RoadMap(6, 6);
+        rm2.DrawRectangle(1, 1, 4, 4);
+        rm2.DrawLineGorizontal(0, 5, 3);
+        PrintTable(rm2.GetMap());
+
+        SymbolSpritesMap ssm2 = new SymbolSpritesMap(rm2);
+        ssm2.PrintSymbolSpriteRoad();
+
+        Console.WriteLine("\nТест 3: Рисуем сетку");
+        RoadMap gridTestMap = new RoadMap(15, 30);
+        gridTestMap.DrawGrid(1, 1, 20, 10, 4, 2);
+        PrintTable(gridTestMap.GetMap());
+        SymbolSpritesMap ssmGrid = new SymbolSpritesMap(gridTestMap);
+        ssmGrid.PrintSymbolSpriteRoad();
+
+        Console.WriteLine("\nnТест 4: Генерация случайной карты");
+        RoadMap randomTestMap = new RoadMap(12, 25);
+        randomTestMap.GenerateRandomMap(elementsCount: 8, maxLineLengthPercent: 60, maxRectSizePercent: 40);
+        PrintTable(randomTestMap.GetMap());
+        SymbolSpritesMap ssmRandom = new SymbolSpritesMap(randomTestMap);
+        ssmRandom.PrintSymbolSpriteRoad();
+
+        Console.WriteLine("\nТест 5: Сохранение и загрузка карты");
+        RoadMap mapForSaving = new RoadMap(7, 15);
+        mapForSaving.DrawLineGorizontal(0, 10, 1);
+        mapForSaving.DrawRectangle(1, 1, 5, 3);
+        PrintTable(mapForSaving.GetMap());
+
+        string filename = "my_awesome_map.txt";
+        if (mapForSaving.SaveMapToFile(filename))
+        {
+            Console.WriteLine($"Попытка загрузить карту из файла '{filename}'...");
+            RoadMap loadedMap = RoadMap.LoadMapFromFile(filename);
+            if (loadedMap != null)
+            {
+                Console.WriteLine("Загруженная карта::");
+                PrintTable(loadedMap.GetMap());
+                SymbolSpritesMap ssmLoaded = new SymbolSpritesMap(loadedMap);
+                ssmLoaded.PrintSymbolSpriteRoad();
+            }
+        }
+    }
+}
+
