@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Windows.Forms;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace AreaGame
 {
@@ -22,6 +22,7 @@ namespace AreaGame
 
         // Для хранения рекордов
         private Dictionary<int, List<int>> records = new Dictionary<int, List<int>>();
+        private const int CellSize = 20; // Одна клетка = 20 на 20 пикселей
 
         public MainForm()
         {
@@ -35,7 +36,6 @@ namespace AreaGame
             gameTimer.Tick += GameTimer_Tick;
         }
 
-        
         private void InitializeGame()
         {
             // Настройка размеров формы
@@ -125,6 +125,8 @@ namespace AreaGame
 
         private void CreateGameUI()
         {
+
+
             // Панель информации
             var infoPanel = new Panel
             {
@@ -180,65 +182,79 @@ namespace AreaGame
             };
             menuBtn.Click += (s, e) => ReturnToMenu();
 
+
+            // В методе CreateGameUI стилизация:
+            submitBtn.BackColor = Color.LimeGreen;
+            submitBtn.ForeColor = Color.White;
+            submitBtn.FlatStyle = FlatStyle.Flat;
+            submitBtn.FlatAppearance.BorderSize = 0;
+            menuBtn.BackColor = Color.Orange;
+            menuBtn.ForeColor = Color.White;
+
+
             this.Controls.AddRange(new Control[] { infoPanel, answerBox, submitBtn, menuBtn });
         }
 
         private void GenerateRectangles()
         {
-            int width, height;
+            int widthCells, heightCells; // Размеры в клетках!
 
-            // Генерация размеров в зависимости от сложности
+            // Генерация размеров В КЛЕТКАХ
             switch (difficulty)
             {
-                case 1: // Легкий
-                    width = random.Next(100, 300);
-                    height = random.Next(100, 300);
+                case 1: // Легкий (5-15 клеток)
+                    widthCells = random.Next(5, 16);
+                    heightCells = random.Next(5, 16);
                     break;
-                case 2: // Средний
-                    width = random.Next(50, 400);
-                    height = random.Next(50, 400);
+                case 2: // Средний (3-20 клеток)
+                    widthCells = random.Next(3, 21);
+                    heightCells = random.Next(3, 21);
                     break;
-                case 3: // Сложный
-                    width = random.Next(30, 500);
-                    height = random.Next(30, 500);
+                case 3: // Сложный (2-25 клеток)
+                    widthCells = random.Next(2, 26);
+                    heightCells = random.Next(2, 26);
                     break;
                 default:
-                    width = 200;
-                    height = 200;
+                    widthCells = 10;
+                    heightCells = 10;
                     break;
             }
 
-            // Внешний прямоугольник
-            int outerX = random.Next(100, 500);
-            int outerY = random.Next(100, 400);
-            outerRect = new Rectangle(outerX, outerY, width, height);
+            // Внешний прямоугольник (в пикселях)
+            int outerX = random.Next(10, this.ClientSize.Width - widthCells * CellSize - 10);
+            int outerY = random.Next(10, this.ClientSize.Height - heightCells * CellSize - 10);
+            outerRect = new Rectangle(
+                outerX,
+                outerY,
+                widthCells * CellSize,  // Конвертируем клетки в пиксели
+                heightCells * CellSize
+            );
 
-            // Внутренний прямоугольник (с отступами 10-30px)
-            int margin = random.Next(10, 30);
+            // Внутренний прямоугольник (отступы в клетках!)
+            int marginCells = random.Next(1, Math.Min(widthCells, heightCells) / 2 + 1); // Отступ 1-3 клетки
             innerRect = new Rectangle(
-                outerX + margin,
-                outerY + margin,
-                width - 2 * margin,
-                height - 2 * margin
+                outerX + marginCells * CellSize,
+                outerY + marginCells * CellSize,
+                (widthCells - 2 * marginCells) * CellSize,  // Ширина в клетках → пикселях
+                (heightCells - 2 * marginCells) * CellSize  // Высота в клетках → пикселях
             );
         }
 
         private void MainForm_Paint(object sender, PaintEventArgs e)
         {
             if (!gameRunning) return;
-
             Graphics g = e.Graphics;
 
-            // Рисуем сетчатый фон
+            // Отрисовка сетки (уже привязана к CellSize)
             DrawGrid(g);
 
-            // Рисуем прямоугольники
+            // Отрисовка прямоугольников
             g.FillRectangle(Brushes.LightBlue, outerRect);
             g.FillRectangle(Brushes.Blue, innerRect);
 
-            // Рисуем подсказку с размером внешнего прямоугольника
-            string sizeText = $"Ширина: {outerRect.Width}px, Высота: {outerRect.Height}px";
-            g.DrawString(sizeText, new Font("Arial", 12), Brushes.Black, 10, 60);
+            // Подсказка (теперь показывает клетки)
+            //string sizeText = $"Клеток: {outerRect.Width / CellSize}×{outerRect.Height / CellSize}";
+            //g.DrawString(sizeText, new Font("Arial", 12), Brushes.Black, 10, 60);
         }
 
         private void DrawGrid(Graphics g)
@@ -246,12 +262,12 @@ namespace AreaGame
             // Рисуем сетку 20x20 пикселей
             Pen gridPen = new Pen(Color.LightGray, 1);
 
-            for (int x = 0; x < this.ClientSize.Width; x += 20)
+            for (int x = 0; x < this.ClientSize.Width; x += CellSize)
             {
                 g.DrawLine(gridPen, x, 0, x, this.ClientSize.Height);
             }
 
-            for (int y = 0; y < this.ClientSize.Height; y += 20)
+            for (int y = 0; y < this.ClientSize.Height; y += CellSize)
             {
                 g.DrawLine(gridPen, 0, y, this.ClientSize.Width, y);
             }
@@ -259,33 +275,65 @@ namespace AreaGame
 
         private void CheckAnswer(string answerText)
         {
-            if (!int.TryParse(answerText, out int userAnswer)) return;
-
-            int correctAnswer = innerRect.Width * innerRect.Height;
-            answersHistory.Add(correctAnswer);
-
-            if (userAnswer == correctAnswer)
+            try
             {
-                // Начисляем очки в зависимости от сложности
-                score += 10 * difficulty;
+                // Проверка, является ли ввод целым числом
+                if (!int.TryParse(answerText, out int userAnswer))
+                {
+                    MessageBox.Show("Пожалуйста, введите целое число.");
+                    return;
+                }
 
-                // Обновляем отображение очков
-                var scoreLabel = (Label)this.Controls[0].Controls[0];
-                scoreLabel.Text = $"Очки: {score}";
+                // Проверка наличия элементов управления
+                if (this.Controls.Count > 0 && this.Controls[0].Controls.Count > 0)
+                {
+                    var scoreLabel = (Label)this.Controls[0].Controls[0];
+                    scoreLabel.Text = $"Очки: {score}";
+                }
 
-                // Генерируем новые прямоугольники
-                GenerateRectangles();
-                this.Invalidate();
+                // Вычисляем правильный ответ как площадь внутреннего прямоугольника в клетках
+                int correctAnswer = (innerRect.Width / CellSize) * (innerRect.Height / CellSize);
+                answersHistory.Add(correctAnswer); // Сохраняем правильный ответ в истории
 
-                // Анимация успеха
-                AnimateSuccess();
+                // Отладочный вывод для проверки значений
+                Console.WriteLine($"Внутренний прямоугольник: {innerRect.Width / CellSize}x{innerRect.Height / CellSize} клеток");
+                Console.WriteLine($"Правильный ответ: {correctAnswer}, Ваш ответ: {userAnswer}");
+
+                // Проверка, совпадает ли ответ пользователя с правильным ответом
+                if (userAnswer == correctAnswer)
+                {
+                    // Начисляем очки в зависимости от сложности
+                    score += 10 * difficulty;
+
+                    // Обновляем отображение очков
+                    if (this.Controls.Count > 0 && this.Controls[0].Controls.Count > 0)
+                    {
+                        var scoreLabel = (Label)this.Controls[0].Controls[0];
+                        scoreLabel.Text = $"Очки: {score}";
+                    }
+
+                    // Генерируем новые прямоугольники
+                    GenerateRectangles();
+                    this.Invalidate(); // Обновляем экран
+
+                    // Анимация успеха
+                    AnimateSuccess();
+                }
+                else
+                {
+                    // Анимация ошибки
+                    AnimateError();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Анимация ошибки
-                AnimateError();
+                // Логируем ошибку в консоль
+                Console.WriteLine($"Ошибка: {ex.Message}");
+                // Можно также добавить обработку, чтобы не показывать окно с ошибкой
             }
         }
+
+
 
         private void AnimateSuccess()
         {
@@ -354,31 +402,65 @@ namespace AreaGame
             };
             animTimer.Start();
         }
+        //------------------------------------------------------------
 
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            timeLeft--;
-
-            // Обновляем отображение времени
-            var timeLabel = (Label)this.Controls[0].Controls[1];
-            timeLabel.Text = $"Время: {timeLeft}";
-
-            if (timeLeft <= 0)
+            try
             {
-                EndGame();
+                timeLeft--;
+
+                // Проверка наличия элементов управления
+                if (this.Controls.Count > 0 && this.Controls[0].Controls.Count > 1)
+                {
+                    var timeLabel = (Label)this.Controls[0].Controls[1];
+                    timeLabel.Text = $"Время: {timeLeft}";
+                }
+
+                if (timeLeft <= 0)
+                {
+                    EndGame(); //если истекло время, то вызываем метод
+                }
+            }
+            catch (Exception ex)
+            {
+                // Логируем ошибку в консоль
+                Console.WriteLine($"Ошибка в GameTimer_Tick: {ex.Message}");
+                
             }
         }
+
+
 
         private void EndGame()
         {
             gameTimer.Stop();
             gameRunning = false;
 
+            // Вычисляем правильный ответ для последнего прямоугольника
+            int lastCorrectAnswer = (innerRect.Width / CellSize) * (innerRect.Height / CellSize);
+
             // Сохраняем результат
             SaveRecord();
 
-            // Показываем результаты
-            ShowGameResults();
+            // Показываем результаты + правильный ответ
+            var result = MessageBox.Show(
+                "Время вышло!\n" +
+                $"Ваш счет: {score}\n" +
+                $"Правильный ответ: {lastCorrectAnswer} клеток\n\n" +
+                "Хотите посмотреть рекорды?",
+                "Игра завершена",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Information);
+
+            if (result == DialogResult.Yes)
+            {
+                ShowRecords(this, EventArgs.Empty);
+            }
+            else
+            {
+                ShowGameResults();
+            }
         }
 
         private void SaveRecord()
@@ -436,6 +518,7 @@ namespace AreaGame
         private void ShowGameResults()
         {
             this.Controls.Clear();
+
 
             var title = new Label
             {
