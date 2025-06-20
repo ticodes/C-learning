@@ -1,0 +1,10 @@
+C:\Users\timur\source\repos\Krestiki_noliki\Krestiki_noliki\obj\Debug\Krestiki_noliki.csproj.AssemblyReference.cache
+C:\Users\timur\source\repos\Krestiki_noliki\Krestiki_noliki\obj\Debug\Krestiki_noliki.Properties.Resources.resources
+C:\Users\timur\source\repos\Krestiki_noliki\Krestiki_noliki\obj\Debug\Krestiki_noliki.csproj.GenerateResource.cache
+C:\Users\timur\source\repos\Krestiki_noliki\Krestiki_noliki\obj\Debug\Krestiki_noliki.csproj.CoreCompileInputs.cache
+C:\Users\timur\source\repos\Krestiki_noliki\Krestiki_noliki\bin\Debug\Krestiki_noliki.exe.config
+C:\Users\timur\source\repos\Krestiki_noliki\Krestiki_noliki\bin\Debug\Krestiki_noliki.exe
+C:\Users\timur\source\repos\Krestiki_noliki\Krestiki_noliki\bin\Debug\Krestiki_noliki.pdb
+C:\Users\timur\source\repos\Krestiki_noliki\Krestiki_noliki\obj\Debug\Krestiki_noliki.exe
+C:\Users\timur\source\repos\Krestiki_noliki\Krestiki_noliki\obj\Debug\Krestiki_noliki.pdb
+C:\Users\timur\source\repos\Krestiki_noliki\Krestiki_noliki\obj\Debug\Krestiki_noliki.exe.config
