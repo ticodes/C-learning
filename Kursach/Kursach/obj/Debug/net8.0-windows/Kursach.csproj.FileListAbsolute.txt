@@ -1,0 +1,16 @@
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\Kursach.Form1.resources
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\Kursach.csproj.GenerateResource.cache
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\Kursach.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\Kursach.AssemblyInfoInputs.cache
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\Kursach.AssemblyInfo.cs
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\Kursach.csproj.CoreCompileInputs.cache
+C:\Users\timur\source\repos\Kursach\Kursach\bin\Debug\net8.0-windows\Kursach.exe
+C:\Users\timur\source\repos\Kursach\Kursach\bin\Debug\net8.0-windows\Kursach.deps.json
+C:\Users\timur\source\repos\Kursach\Kursach\bin\Debug\net8.0-windows\Kursach.runtimeconfig.json
+C:\Users\timur\source\repos\Kursach\Kursach\bin\Debug\net8.0-windows\Kursach.dll
+C:\Users\timur\source\repos\Kursach\Kursach\bin\Debug\net8.0-windows\Kursach.pdb
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\Kursach.dll
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\refint\Kursach.dll
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\Kursach.pdb
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\Kursach.genruntimeconfig.cache
+C:\Users\timur\source\repos\Kursach\Kursach\obj\Debug\net8.0-windows\ref\Kursach.dll
